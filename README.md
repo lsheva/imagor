@@ -6,6 +6,11 @@
 [![Docker Hub](https://img.shields.io/badge/docker-shumc/imagor-blue.svg)](https://hub.docker.com/r/shumc/imagor/)
 [![Docs](https://img.shields.io/badge/docs-docs.imagor.net-white)](https://docs.imagor.net)
 
+> [!NOTE]
+> This is a modified fork. The `embedded-previews` branch, on top of upstream master, makes thumbnails from the JPEG
+> previews embedded in camera RAW files and from HEIF stored thumbnails, instead of decoding the full image whenever
+> a preview fills the box. `-vips-disable-embedded-previews` turns it off.
+
 imagor is a fast, secure image processing server and Go library.
 
 imagor uses one of the most efficient image processing libraries,
