@@ -342,6 +342,9 @@ func (v *Processor) NewThumbnail(
 	ctx context.Context, blob *imagor.Blob, width, height int, crop vips.Interesting,
 	size vips.Size, n, page int, dpi int,
 ) (*vips.Image, error) {
+	if img, ok := v.embeddedPreviewThumbnail(blob, width, height, crop, size, n, page); ok {
+		return v.CheckResolution(img, nil)
+	}
 	var options = &vips.LoadOptions{}
 	if dpi > 0 {
 		options.Dpi = dpi
