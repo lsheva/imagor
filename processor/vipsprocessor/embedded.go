@@ -143,6 +143,8 @@ func (v *Processor) embeddedPreviewThumbnail(
 	switch {
 	case blob.IsRaw() && blob.BlobType() != imagor.BlobTypeCR2 && v.hasDcrawload:
 		img, err = rawPreviewThumbnail(blob, width, height, crop, size)
+	case blob.BlobType() == imagor.BlobTypeHEIF:
+		img, err = heifThumbnail(blob, width, height, crop, size)
 	default:
 		return nil, false
 	}
@@ -252,6 +254,32 @@ func smallestCoveringPreview(previews [][]byte, orientation, width, height int, 
 		return withOrientation(best, bestOrientation)
 	}
 	return best
+}
+
+// heifThumbnail uses the thumbnail stored in a HEIF file when it fills the box. libvips only does so when the
+// stored one is larger than needed, and iPhones store one of exactly 320 px, a common thumbnail size.
+func heifThumbnail(
+	blob *imagor.Blob, width, height int, crop vips.Interesting, size vips.Size,
+) (*vips.Image, error) {
+	buf, err := blob.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	img, err := vips.NewHeifloadBuffer(buf, &vips.HeifloadBufferOptions{Thumbnail: true})
+	if err != nil {
+		return nil, err
+	}
+	if !coversBox(img.Width(), img.Height(), width, height, crop) {
+		img.Close()
+		return nil, errNoEmbeddedPreview
+	}
+	if err = img.ThumbnailImage(width, &vips.ThumbnailImageOptions{
+		Height: height, Crop: crop, Size: size,
+	}); err != nil {
+		img.Close()
+		return nil, err
+	}
+	return img, nil
 }
 
 // withOrientation inserts an EXIF segment holding only the orientation tag right after the JPEG start marker, so

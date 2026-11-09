@@ -83,6 +83,20 @@ func TestSmallestCoveringPreview(t *testing.T) {
 	})
 }
 
+func TestHeifThumbnail(t *testing.T) {
+	// a 1634x2224 image that stores a 234x320 thumbnail
+	blob := imagor.NewBlobFromFile("../../testdata/gopher-thumbnail.heic")
+
+	img, err := heifThumbnail(blob, 320, 320, vips.InterestingNone, vips.SizeDown)
+	require.NoError(t, err)
+	defer img.Close()
+	assert.Equal(t, 234, img.Width())
+	assert.Equal(t, 320, img.Height())
+
+	_, err = heifThumbnail(blob, 384, 384, vips.InterestingNone, vips.SizeDown)
+	assert.ErrorIs(t, err, errNoEmbeddedPreview)
+}
+
 // TestRawPreviewThumbnail needs a camera RAW file with embedded previews, which the repository does not carry:
 // IMAGOR_TEST_RAW names one.
 func TestRawPreviewThumbnail(t *testing.T) {
