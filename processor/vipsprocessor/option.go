@@ -53,6 +53,16 @@ func WithDisableBlur(disabled bool) Option {
 	}
 }
 
+// WithDisableEmbeddedPreviews makes thumbnails of camera RAW, HEIF and AVIF files from the full image rather than
+// from a preview stored in the file. By default a stored preview that fills the box without being enlarged is used,
+// the smallest one for RAW files. A camera's embedded JPEG carries the camera's own rendering, which can differ
+// from LibRaw's development of the raw data.
+func WithDisableEmbeddedPreviews(disabled bool) Option {
+	return func(v *Processor) {
+		v.DisableEmbeddedPreviews = disabled
+	}
+}
+
 // WithDisableFilters with disable filters option
 func WithDisableFilters(filters ...string) Option {
 	return func(v *Processor) {

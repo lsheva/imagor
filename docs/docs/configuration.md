@@ -271,6 +271,8 @@ VIPS_MAX_FILTER_OPS=-1       # Max filter operations per request. Some filters, 
                              # format and quality, are not counted. -1 = unlimited
 VIPS_DISABLE_BLUR=1          # Disable all blur operations
 VIPS_DISABLE_FILTERS=blur,watermark  # Disable specific filters (csv)
+VIPS_DISABLE_EMBEDDED_PREVIEWS=1     # Make thumbnails of camera RAW, HEIF and AVIF files from the full image
+                                     # instead of a preview stored in the file that fills the box
 
 # Output
 VIPS_MOZJPEG=1               # Use MozJPEG for JPEG encoding (requires imagor-mozjpeg build)
@@ -294,6 +296,8 @@ VIPS_CACHE_MAX_HEIGHT=2000   # Max image height to cache (default 2000)
 VIPS_CACHE_TTL=              # Cache entry TTL. 0 = no expiry (LRU eviction only)
 VIPS_CACHE_FORMAT=pixel      # Cache format: pixel (default), png (lossless), webp (lossy)
 ```
+
+Thumbnails of camera RAW, HEIF and AVIF files are made from a preview stored in the file when one fills the requested size without being enlarged, otherwise from the full image. RAW previews need libvips built with LibRaw, as the imagor Docker image is; distribution packages differ, and Debian's and Alpine's are built without it. With LibRaw in the process every preview a camera stores is considered, up to the full size one many cameras embed; otherwise only the preview libvips picks, which is smaller than the image. HEIF and AVIF stored thumbnails need nothing beyond HEIF support. An embedded preview carries the camera's own rendering, so set `VIPS_DISABLE_EMBEDDED_PREVIEWS=1` where thumbnails have to match a development of the raw data.
 
 ## Monitoring
 
