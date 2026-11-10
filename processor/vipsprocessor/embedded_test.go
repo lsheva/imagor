@@ -129,3 +129,15 @@ func TestRawPreviewThumbnail(t *testing.T) {
 		img.Close()
 	}
 }
+
+func TestDisableEmbeddedPreviews(t *testing.T) {
+	blob := imagor.NewBlobFromFile("../../testdata/gopher-thumbnail.heic")
+
+	img, ok := NewProcessor().embeddedPreviewThumbnail(blob, 320, 320, vips.InterestingNone, vips.SizeDown, 1, 1)
+	require.True(t, ok)
+	img.Close()
+
+	_, ok = NewProcessor(WithDisableEmbeddedPreviews(true)).
+		embeddedPreviewThumbnail(blob, 320, 320, vips.InterestingNone, vips.SizeDown, 1, 1)
+	assert.False(t, ok)
+}

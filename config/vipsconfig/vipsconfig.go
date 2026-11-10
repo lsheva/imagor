@@ -17,6 +17,8 @@ func WithVips(fs *flag.FlagSet, cb func() (*zap.Logger, bool)) imagor.Option {
 			"VIPS maximum number of animation frames to be loaded. Set 1 to disable animation, -1 for unlimited")
 		vipsDisableFilters = fs.String("vips-disable-filters", "",
 			"VIPS disable filters by csv e.g. blur,watermark,rgb")
+		vipsDisableEmbeddedPreviews = fs.Bool("vips-disable-embedded-previews", false,
+			"VIPS make thumbnails of camera RAW, HEIF and AVIF files from the full image, not from the previews stored in them")
 		vipsMaxFilterOps = fs.Int("vips-max-filter-ops", -1,
 			"VIPS maximum number of filter operations per request. Set -1 for unlimited")
 		vipsConcurrency = fs.Int("vips-concurrency", 1,
@@ -65,6 +67,7 @@ func WithVips(fs *flag.FlagSet, cb func() (*zap.Logger, bool)) imagor.Option {
 			vipsprocessor.WithMaxAnimationFrames(*vipsMaxAnimationFrames),
 			vipsprocessor.WithDisableBlur(*vipsDisableBlur),
 			vipsprocessor.WithDisableFilters(*vipsDisableFilters),
+			vipsprocessor.WithDisableEmbeddedPreviews(*vipsDisableEmbeddedPreviews),
 			vipsprocessor.WithConcurrency(*vipsConcurrency),
 			vipsprocessor.WithMaxCacheFiles(*vipsMaxCacheFiles),
 			vipsprocessor.WithMaxCacheMem(*vipsMaxCacheMem),

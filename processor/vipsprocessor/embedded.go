@@ -136,7 +136,7 @@ func hasLibRaw() bool {
 func (v *Processor) embeddedPreviewThumbnail(
 	blob *imagor.Blob, width, height int, crop vips.Interesting, size vips.Size, n, page int,
 ) (img *vips.Image, ok bool) {
-	if blob == nil || size == vips.SizeForce || isMultiPage(blob, n, page) {
+	if v.DisableEmbeddedPreviews || blob == nil || size == vips.SizeForce || isMultiPage(blob, n, page) {
 		return nil, false
 	}
 	var err error

@@ -56,6 +56,9 @@ type Processor struct {
 	Unlimited            bool
 	Debug                bool
 
+	// DisableEmbeddedPreviews makes every thumbnail from the full image, see WithDisableEmbeddedPreviews
+	DisableEmbeddedPreviews bool
+
 	// Image cache settings
 	CacheSize      int64
 	CacheMaxWidth  int
