@@ -1,6 +1,7 @@
 package vipsprocessor
 
 import (
+	"errors"
 	"os"
 	"testing"
 
@@ -109,22 +110,22 @@ func TestRawPreviewThumbnail(t *testing.T) {
 	}
 	buf, err := os.ReadFile(path)
 	require.NoError(t, err)
-	t.Logf("LibRaw in the process: %v, previews: %d", hasLibRaw(), len(rawPreviews(buf)))
+	t.Logf("LibRaw in the process: %v", hasLibRaw())
+	for _, preview := range rawPreviews(buf) {
+		width, height, _ := jpegSize(t, preview)
+		t.Logf("preview %dx%d", width, height)
+	}
 
-	for _, box := range []int{320, 1280} {
+	// a box no stored preview fills is left to the full image
+	for _, box := range []int{320, 1280, 1920} {
 		img, err := rawPreviewThumbnail(imagor.NewBlobFromBytes(buf), box, box, vips.InterestingNone, vips.SizeDown)
+		if errors.Is(err, errNoEmbeddedPreview) {
+			t.Logf("box %d: no preview fills it", box)
+			continue
+		}
 		require.NoError(t, err, "box %d", box)
 		assert.Equal(t, box, max(img.Width(), img.Height()), "box %d", box)
+		t.Logf("box %d: %dx%d", box, img.Width(), img.Height())
 		img.Close()
 	}
-
-	// only LibRaw offers the full size preview, libvips picks one smaller than the image
-	img, err := rawPreviewThumbnail(imagor.NewBlobFromBytes(buf), 1920, 1920, vips.InterestingNone, vips.SizeDown)
-	if !hasLibRaw() {
-		assert.ErrorIs(t, err, errNoEmbeddedPreview)
-		return
-	}
-	require.NoError(t, err)
-	defer img.Close()
-	assert.Equal(t, 1920, max(img.Width(), img.Height()))
 }

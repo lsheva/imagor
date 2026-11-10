@@ -140,10 +140,11 @@ func (v *Processor) embeddedPreviewThumbnail(
 		return nil, false
 	}
 	var err error
-	switch {
-	case blob.IsRaw() && blob.BlobType() != imagor.BlobTypeCR2 && v.hasDcrawload:
+	switch blobType := blob.BlobType(); {
+	// TIFF covers the TIFF based RAW formats, DNG, NEF, ARW and others. LibRaw rejects a plain TIFF quickly.
+	case v.hasDcrawload && (blob.IsRaw() || blobType == imagor.BlobTypeTIFF):
 		img, err = rawPreviewThumbnail(blob, width, height, crop, size)
-	case blob.BlobType() == imagor.BlobTypeHEIF:
+	case blobType == imagor.BlobTypeHEIF || blobType == imagor.BlobTypeAVIF:
 		img, err = heifThumbnail(blob, width, height, crop, size)
 	default:
 		return nil, false
@@ -161,8 +162,14 @@ func rawPreviewThumbnail(
 	if err != nil {
 		return nil, err
 	}
-	// loading only reads the header, which carries the orientation and the preview libvips picked
-	header, err := vips.NewDcrawloadBuffer(buf, nil)
+	// loading only reads the header, which carries the orientation and the preview libvips picked. CR2 is read as
+	// the TIFF it is, dcrawload is kept away from it as it is elsewhere, so only LibRaw offers its previews.
+	var header *vips.Image
+	if blob.BlobType() == imagor.BlobTypeCR2 {
+		header, err = vips.NewTiffloadBuffer(buf, nil)
+	} else {
+		header, err = vips.NewDcrawloadBuffer(buf, nil)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -256,8 +263,8 @@ func smallestCoveringPreview(previews [][]byte, orientation, width, height int, 
 	return best
 }
 
-// heifThumbnail uses the thumbnail stored in a HEIF file when it fills the box. libvips only does so when the
-// stored one is larger than needed, and iPhones store one of exactly 320 px, a common thumbnail size.
+// heifThumbnail uses the thumbnail stored in a HEIF or AVIF file when it fills the box. libvips only does so when
+// the stored one is larger than needed, and iPhones store one of exactly 320 px, a common thumbnail size.
 func heifThumbnail(
 	blob *imagor.Blob, width, height int, crop vips.Interesting, size vips.Size,
 ) (*vips.Image, error) {
