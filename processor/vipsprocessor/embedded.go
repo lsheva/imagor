@@ -111,6 +111,7 @@ import (
 
 	"github.com/cshum/imagor"
 	"github.com/cshum/vipsgen/v2/vips"
+	"go.uber.org/zap"
 )
 
 // maxRawPreviews bounds the previews looked at in one file, cameras store up to three.
@@ -149,7 +150,31 @@ func (v *Processor) embeddedPreviewThumbnail(
 	default:
 		return nil, false
 	}
-	return img, err == nil
+	if err != nil {
+		// expected whenever no stored preview is large enough, so not worth more than debug
+		v.Logger.Debug("embedded preview not used, decoding the full image",
+			zap.String("type", blob.ContentType()), zap.Int("width", width), zap.Int("height", height),
+			zap.Error(err))
+		return nil, false
+	}
+	return img, true
+}
+
+// logEmbeddedPreviews tells at start up which stored previews thumbnails can be made from.
+func (v *Processor) logEmbeddedPreviews() {
+	if v.DisableEmbeddedPreviews {
+		v.Logger.Info("embedded previews disabled")
+		return
+	}
+	raw := "off, libvips has no dcrawload"
+	if v.hasDcrawload {
+		raw = "every preview, from LibRaw"
+		if !hasLibRaw() {
+			raw = "the preview libvips picks, LibRaw is not in the process"
+		}
+	}
+	v.Logger.Info("embedded previews",
+		zap.String("raw", raw), zap.Bool("heif", vips.HasOperation("heifload_buffer")))
 }
 
 // rawPreviewThumbnail makes the thumbnail from the smallest JPEG preview stored in a camera RAW file that fills the

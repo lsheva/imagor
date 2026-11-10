@@ -167,6 +167,7 @@ func (v *Processor) Startup(ctx context.Context) error {
 	if v.hasDcrawload {
 		v.Logger.Debug("dcrawload support enabled")
 	}
+	v.logEmbeddedPreviews()
 	if v.FallbackFunc == nil {
 		if vips.HasOperation("magickload_buffer") {
 			v.FallbackFunc = bufferFallbackFunc
